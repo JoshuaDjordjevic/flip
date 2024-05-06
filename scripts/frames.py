@@ -48,6 +48,7 @@ class Frames:
         """
         current = self.current()
         self.frames.insert(self.index, current.copy())
+        self.index += 1
         self.__refresh_background_layer()
     
     def delete(self):
