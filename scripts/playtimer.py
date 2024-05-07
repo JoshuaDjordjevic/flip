@@ -12,6 +12,9 @@ class Playtimer(object):
         self.framerate = framerate
         self.frametime = 1 / framerate
     
+    def toggle_play(self):
+        self.playing = not self.playing
+    
     def play(self):
         self.playing = True
     

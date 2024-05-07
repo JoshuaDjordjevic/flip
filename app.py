@@ -15,7 +15,7 @@ pygame.display.set_caption("Flip Animation")
 
 font = pygame.font.Font("./resources/8514oem.fon", 20)
 
-frame_size = pygame.Vector2(820, 614)
+frame_size = pygame.Vector2(820, 614) // 2
 frame_rect = pygame.Rect((0, 0), frame_size)
 frame_rect.center = display_size_half
 
@@ -23,16 +23,26 @@ frame_rect.center = display_size_half
 frames = Frames(frame_rect)
 frames.new_at(0)
 
+# Create a playback timer
+playtimer = Playtimer()
+
 # Create a ui screen
 screen = ui.Screen()
-screen.add_element(ui.Button("play", (display_size_half.x, 38), (120, 40), text="Play/Pause", font=font))
-screen.add_element(ui.Button("frame_new", (display_size_half.x+100*-2, display_size.y-38), (90, 40), text="New", font=font))
-screen.add_element(ui.Button("frame_copy", (display_size_half.x+100*-1, display_size.y-38), (90, 40), text="Copy", font=font))
-screen.add_element(ui.Button("frame_delete", (display_size_half.x+100*0, display_size.y-38), (90, 40), text="Delete", font=font))
-screen.add_element(ui.Button("frame_prev", (display_size_half.x+100*1, display_size.y-38), (90, 40), text="Previous", font=font))
-screen.add_element(ui.Button("frame_next", (display_size_half.x+100*2, display_size.y-38), (90, 40), text="Next", font=font))
+screen.add_element(ui.Button("play", (display_size_half.x, 38), (120, 40), text="Play/Pause", font=font, on_click=lambda e: playtimer.toggle_play()))
 
-playtimer = Playtimer()
+btn_frame_new = ui.Button("frame_new", (0,0), (90, 40), text="New", font=font, on_click=lambda e: frames.new())
+btn_frame_copy = ui.Button("frame_copy", (0,0), (90, 40), text="Copy", font=font, on_click=lambda e: frames.copy())
+btn_frame_delete = ui.Button("frame_delete", (0,0), (90, 40), text="Delete", font=font, on_click=lambda e: frames.delete())
+btn_frame_prev = ui.Button("frame_prev", (0,0), (90, 40), text="Previous", font=font, on_click=lambda e: frames.goto_previous())
+btn_frame_next = ui.Button("frame_next", (0,0), (90, 40), text="Next", font=font, on_click=lambda e: frames.goto_next())
+
+screen.add_and_pack(
+    elements=[btn_frame_new, btn_frame_copy, btn_frame_delete, btn_frame_prev, btn_frame_next],
+    anchor=pygame.Vector2(display_size_half.x, display_size.y-38),
+    direction=0,
+    alignment=0,
+    spacing=20.0
+)
 
 mouse_position_last = pygame.Vector2(pygame.mouse.get_pos())
 
@@ -67,26 +77,6 @@ while running:
                     playtimer.pause()
                 else:
                     playtimer.play()
-        
-        if event.type == pygame.MOUSEBUTTONUP:
-            hovered_element = screen.hovered_element
-            if hovered_element is not None:
-
-                func = {
-                    "frame_new": frames.new,
-                    "frame_copy": frames.copy,
-                    "frame_delete": frames.delete,
-                    "frame_prev": frames.goto_previous,
-                    "frame_next": frames.goto_next
-                }.get(hovered_element.identifier)
-
-                if func is not None:
-                    func()
-                elif hovered_element.identifier == "play":
-                    if playtimer.playing:
-                        playtimer.pause()
-                    else:
-                        playtimer.play()
     
     mouse_buttons_down = pygame.mouse.get_pressed()
 

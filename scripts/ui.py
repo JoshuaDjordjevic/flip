@@ -66,14 +66,26 @@ class Element(object):
         pass
 
 class Button(Element):
-    def __init__(self, identifier: str, center: pygame.Vector2, size: pygame.Vector2, text: str = "", font=None):
+    is_clickable:True
+    can_hover:True
+    on_click:typing.Callable[[pygame.Event], None]
+
+    def __init__(self,
+                 identifier:str,
+                 center:pygame.Vector2,
+                 size:pygame.Vector2,
+                 text:str = "",
+                 font=None,
+                 on_click:typing.Callable[[pygame.Event], None]=None):
         super().__init__(identifier, center, size, text, font)
         self.is_clickable = True
         self.can_hover = True
+        self.on_click = on_click
     
     def process_event(self, event: pygame.Event):
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-            print("LMB", self.identifier)
+            if self.on_click is not None:
+                self.on_click(event)
 
 class Screen(object):
     elements:typing.List[Element]
@@ -122,7 +134,7 @@ class Screen(object):
         total_size_vector = direction_vector*total_size
 
         # Lay out elements side by side or top to bottom
-        start_at = anchor
+        start_at = anchor.copy()
         if alignment == 1:
             start_at -= total_size_vector
         elif alignment == 0:
@@ -131,11 +143,16 @@ class Screen(object):
         offset = 0
         for element in elements:
             new_rect = element.rect.copy()
-            new_rect.center = start_at + direction_vector*offset
+            if direction == 0:
+                new_rect.centery = anchor.y
+                new_rect.left = (start_at + direction_vector*offset).x
+            else:
+                new_rect.centerx = anchor.x
+                new_rect.top = (start_at + direction_vector*offset).y
             element.set_rect(new_rect)
             offset += size_function(element.rect)
             offset += spacing
-
+            self.add_element(element)
     
     def update(self, mouse_pos:pygame.Vector2):
         self.clear_hovered_element()
