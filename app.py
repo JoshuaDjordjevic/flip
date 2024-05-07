@@ -4,6 +4,7 @@ from pygame.locals import *
 
 from scripts.frames import Frames
 from scripts.playtimer import Playtimer
+from scripts import ui
 
 pygame.init()
 
@@ -12,7 +13,17 @@ display_size_half = display_size * 0.5
 display = pygame.display.set_mode(display_size)
 pygame.display.set_caption("Flip Animation")
 
-font = pygame.font.SysFont("Arial", 14, True)
+font = pygame.font.SysFont("8514oem", 20, True)
+
+# Create a ui screen
+screen = ui.Screen()
+screen.add_element(ui.Element("play", (display_size_half.x, 38), (120, 40), text="Play/Pause", font=font))
+
+screen.add_element(ui.Element("frame_new", (display_size_half.x+90*-2, display_size.y-38), (80, 40), text="New", font=font))
+screen.add_element(ui.Element("frame_copy", (display_size_half.x+90*-1, display_size.y-38), (80, 40), text="Copy", font=font))
+screen.add_element(ui.Element("frame_delete", (display_size_half.x+90*0, display_size.y-38), (80, 40), text="Delete", font=font))
+screen.add_element(ui.Element("frame_prev", (display_size_half.x+90*1, display_size.y-38), (80, 40), text="Previous", font=font))
+screen.add_element(ui.Element("frame_next", (display_size_half.x+90*2, display_size.y-38), (80, 40), text="Next", font=font))
 
 frame_size = pygame.Vector2(820, 614)
 frame_rect = pygame.Rect((0, 0), frame_size)
@@ -56,6 +67,26 @@ while running:
                     playtimer.pause()
                 else:
                     playtimer.play()
+        
+        if event.type == pygame.MOUSEBUTTONUP:
+            focused_element = screen.focused_element
+            if focused_element is not None:
+
+                func = {
+                    "frame_new": frames.new,
+                    "frame_copy": frames.copy,
+                    "frame_delete": frames.delete,
+                    "frame_prev": frames.goto_previous,
+                    "frame_next": frames.goto_next
+                }.get(focused_element.identifier)
+
+                if func is not None:
+                    func()
+                elif focused_element.identifier == "play":
+                    if playtimer.playing:
+                        playtimer.pause()
+                    else:
+                        playtimer.play()
     
     mouse_buttons_down = pygame.mouse.get_pressed()
 
@@ -73,6 +104,7 @@ while running:
     mouse_position_last = mouse_position
 
     playtimer.update(dt, frames)
+    screen.update(mouse_position)
     
     display.fill((25, 25, 35))
     frames.draw(display)
@@ -84,6 +116,8 @@ while running:
         y = i*20+10
         text_surface = font.render(line, True, (255, 255, 255))
         display.blit(text_surface, (10, y))
+    
+    screen.draw(display)
 
     pygame.display.flip()
 
